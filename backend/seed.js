@@ -1,250 +1,177 @@
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-dotenv.config();
+const bcrypt = require('bcryptjs');
+require('dotenv').config();
 
-const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/analytics_db';
+const mongoURI = process.env.MONGO_URI;
 
-// --- SCHEMAS ---
+if (!mongoURI) {
+    console.error('MONGO_URI is missing in .env file ❌');
+    process.exit(1);
+}
+
+// ============ DATABASE SCHEMAS ============
 const studentSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  department: { type: String },
-  year: { type: String },
-  password: { type: String, default: 'password123' },
-  role: { type: String, default: 'student' },
-  currentGPA: { type: Number, default: 0 },
-  previousGPA: { type: Number, default: 0 },
-  velocityScore: { type: Number, default: 0 },
-  profileCompleted: { type: Boolean, default: true },
-});
-
-const subjectSchema = new mongoose.Schema({
-  subjectName: { type: String, required: true },
-  marks: { type: Number, required: true },
-  grade: { type: String, required: true },
-});
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    role: { type: String, enum: ['student', 'teacher', 'admin'], default: 'student' },
+    department: { type: String, default: '' },
+    year: { type: String, default: '' },
+    currentGPA: { type: Number, default: 0 },
+    previousGPA: { type: Number, default: 0 },
+    velocityScore: { type: Number, default: 0 },
+    profileCompleted: { type: Boolean, default: true },
+}, { timestamps: true });
 
 const academicRecordSchema = new mongoose.Schema({
-  studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
-  semester: { type: Number, required: true },
-  year: { type: Number, required: true },
-  gpa: { type: Number, required: true },
-  subjects: [subjectSchema],
-  totalMarks: { type: Number, default: 0 },
-  averageMarks: { type: Number, default: 0 },
-  status: { type: String, default: 'submitted' },
-});
-
-// Middleware for academic records
-academicRecordSchema.pre('save', function (next) {
-  if (this.subjects && this.subjects.length > 0) {
-    const total = this.subjects.reduce((sum, subject) => sum + subject.marks, 0);
-    this.totalMarks = total;
-    this.averageMarks = parseFloat((total / this.subjects.length).toFixed(2));
-  }
-  next();
-});
-
-const messageSchema = new mongoose.Schema({
-  senderId: { type: mongoose.Schema.Types.ObjectId, required: true },
-  senderRole: { type: String, required: true },
-  receiverId: { type: mongoose.Schema.Types.ObjectId, required: true },
-  receiverRole: { type: String, required: true },
-  subject: { type: String, default: '' },
-  messageText: { type: String, required: true },
-  messageType: { type: String, default: 'text' },
-  priority: { type: String, default: 'low' },
-  isRead: { type: Boolean, default: false },
+    studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
+    semester: { type: Number, required: true },
+    year: { type: Number, required: true },
+    gpa: { type: Number, required: true },
+    subjects: { type: Array, default: [] },
+    status: { type: String, default: 'verified' }
 }, { timestamps: true });
 
 const taskSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  description: { type: String, required: true },
-  deadline: { type: Date, required: true },
-  status: { type: String, enum: ['pending', 'completed'], default: 'pending' },
-  studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
-  teacherId: { type: mongoose.Schema.Types.ObjectId, required: true }
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+    deadline: { type: Date, required: true },
+    status: { type: String, enum: ['pending', 'completed', 'under_review', 'approved', 'rejected'], default: 'pending' },
+    studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
+    teacherId: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
 }, { timestamps: true });
 
-// --- MODELS ---
+// Models (User points to same collection as Student as per backend architecture)
 const Student = mongoose.model('Student', studentSchema);
 const AcademicRecord = mongoose.model('AcademicRecord', academicRecordSchema);
-const Message = mongoose.model('Message', messageSchema);
 const Task = mongoose.model('Task', taskSchema);
 
-// --- HELPER FUNCTIONS ---
-const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+// Helper for random number in range
+const randomGPA = () => parseFloat((Math.random() * (9.5 - 6.0) + 6.0).toFixed(2));
+const getRandomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-const getGrade = (marks) => {
-  if (marks >= 90) return 'A+';
-  if (marks >= 80) return 'A';
-  if (marks >= 70) return 'B';
-  if (marks >= 60) return 'C';
-  if (marks >= 50) return 'D';
-  return 'F';
-};
-
-const getGPAFromMarks = (marks) => {
-  return parseFloat(((marks / 100) * 4).toFixed(2));
-};
-
-const firstNames = ['John', 'Jane', 'Michael', 'Sarah', 'David', 'Laura', 'James', 'Emma', 'William', 'Olivia', 'Robert', 'Sophia', 'Charles', 'Isabella', 'Joseph', 'Mia', 'Thomas', 'Charlotte', 'Christopher', 'Amelia', 'Daniel', 'Harper', 'Matthew', 'Evelyn', 'Anthony', 'Abigail', 'Mark', 'Emily', 'Paul', 'Elizabeth', 'Steven', 'Sofia', 'Andrew', 'Avery', 'Kenneth', 'Ella', 'Joshua', 'Madison', 'Kevin', 'Scarlett'];
-const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin'];
-
-const subjectNames = ['Data Structures', 'Database Systems', 'Algorithms', 'Web Development', 'Operating Systems', 'Computer Networks'];
-
-// --- SEED FUNCTION ---
 const seedDB = async () => {
-  try {
-    console.log('🌱 Connecting to MongoDB...', mongoURI);
-    await mongoose.connect(mongoURI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log('✅ Connected.');
+    try {
+        console.log('🔗 Connecting to MongoDB Atlas...');
+        await mongoose.connect(mongoURI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        });
+        console.log('Connected to MongoDB Atlas ✅');
 
-    console.log('🗑️ Clearing existing data...');
-    await Student.deleteMany({});
-    await AcademicRecord.deleteMany({});
-    await Message.deleteMany({});
-    await Task.deleteMany({});
+        // Clear existing data? 
+        // Logic: Check for duplicates instead as requested.
 
-    // 1. Create a Teacher
-    const teacher = await Student.create({
-      name: 'Professor Alan Turing',
-      email: 'teacher@sagva.edu',
-      department: 'Computer Science',
-      year: 'N/A',
-      password: 'password123',
-      role: 'teacher',
-      profileCompleted: true
-    });
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash('password123', salt);
 
-    // 1b. Create an Admin
-    await Student.create({
-      name: 'System Admin',
-      email: 'admin@sagva.edu',
-      department: 'Administration',
-      year: 'N/A',
-      password: 'password123',
-      role: 'admin',
-      profileCompleted: true
-    });
-
-    console.log('👨‍🏫 Teacher and Admin created.');
-
-    const students = [];
-
-    // 2. Generate 40 Students
-    for (let i = 0; i < 40; i++) {
-      const firstName = firstNames[i % firstNames.length];
-      const lastName = lastNames[getRandomInt(0, lastNames.length - 1)];
-      
-      const newStudent = await Student.create({
-        name: `${firstName} ${lastName}`,
-        email: `student${i + 1}@sagva.edu`,
-        department: 'Computer Science',
-        year: `Year ${getRandomInt(1, 4)}`,
-        password: 'password123',
-        role: 'student',
-      });
-
-      students.push(newStudent);
-
-      // 3. Generate Academic Records (2 to 4 semesters)
-      const numSemesters = getRandomInt(2, 4);
-      let gpaHistory = [];
-      let isAtRiskStudent = i % 4 === 0; // Every 4th student will explicitly have declining performance
-
-      for (let sem = 1; sem <= numSemesters; sem++) {
-        const subjects = [];
-        let totalSemesterMarks = 0;
-
-        for (let s = 0; s < 4; s++) {
-          let minMarks = 50;
-          let maxMarks = 95;
-
-          // Introduce negative velocity by lowering marks in later semesters for at-risk students
-          if (isAtRiskStudent && sem > 1) {
-            maxMarks = 70;
-            minMarks = 40;
-          } else if (!isAtRiskStudent && sem > 1) {
-            // Good students improve slightly
-            minMarks = 65;
-            maxMarks = 98;
-          }
-
-          const marks = getRandomInt(minMarks, maxMarks);
-          totalSemesterMarks += marks;
-          
-          subjects.push({
-            subjectName: subjectNames[s % subjectNames.length],
-            marks,
-            grade: getGrade(marks)
-          });
+        // 1. Create Admin
+        const adminEmail = 'admin@sagva.edu';
+        let admin = await Student.findOne({ email: adminEmail });
+        if (!admin) {
+            admin = await Student.create({
+                name: 'System Admin',
+                email: adminEmail,
+                password: hashedPassword,
+                role: 'admin',
+                department: 'Administration',
+                year: 'N/A'
+            });
+            console.log('Admin user created 👨‍💻');
         }
 
-        const avgMarks = totalSemesterMarks / 4;
-        const gpa = getGPAFromMarks(avgMarks);
-        gpaHistory.push(gpa);
+        // 2. Create Teacher
+        const teacherEmail = 'teacher@sagva.edu';
+        let teacher = await Student.findOne({ email: teacherEmail });
+        if (!teacher) {
+            teacher = await Student.create({
+                name: 'Professor Alan Turing',
+                email: teacherEmail,
+                password: hashedPassword,
+                role: 'teacher',
+                department: 'Computer Science',
+                year: 'N/A'
+            });
+            console.log('Teacher user created 👨‍🏫');
+        }
 
-        await AcademicRecord.create({
-          studentId: newStudent._id,
-          semester: sem,
-          year: 2024,
-          gpa: gpa,
-          subjects: subjects
-        });
-      }
+        // 3. Create 40 Students
+        const departments = ['CSE', 'IT', 'ECE', 'MECH'];
+        const studentIds = [];
 
-      // 4. Update Student GPA and Velocity
-      const currentGPA = gpaHistory[gpaHistory.length - 1];
-      const previousGPA = gpaHistory[gpaHistory.length - 2] || 0;
-      const velocityScore = parseFloat((currentGPA - previousGPA).toFixed(2));
+        for (let i = 1; i <= 40; i++) {
+            const email = `student${i}@sagva.edu`;
+            let student = await Student.findOne({ email });
 
-      newStudent.currentGPA = currentGPA;
-      newStudent.previousGPA = previousGPA;
-      newStudent.velocityScore = velocityScore;
-      await newStudent.save();
+            if (!student) {
+                const sem1GPA = randomGPA();
+                const sem2GPA = randomGPA();
+                const velocity = parseFloat((sem2GPA - sem1GPA).toFixed(2));
 
-      // 5. Generate Messages
-      const msgCount = getRandomInt(2, 3);
-      for (let m = 0; m < msgCount; m++) {
-        await Message.create({
-          senderId: teacher._id,
-          senderRole: 'teacher',
-          receiverId: newStudent._id,
-          receiverRole: 'student',
-          subject: 'Academic Performance Review',
-          messageText: velocityScore < 0 
-              ? 'I noticed your performance has declined recently. Please review the study plan immediately.' 
-              : 'Great job this semester! Keep up the good work and maintain this momentum.',
-        });
-      }
+                student = await Student.create({
+                    name: `Student${i}`,
+                    email: email,
+                    password: hashedPassword,
+                    role: 'student',
+                    department: getRandomItem(departments),
+                    year: String(Math.floor(Math.random() * 4) + 1),
+                    currentGPA: sem2GPA,
+                    previousGPA: sem1GPA,
+                    velocityScore: velocity
+                });
 
-      // 6. Generate Tasks
-      const taskCount = getRandomInt(2, 3);
-      for (let t = 0; t < taskCount; t++) {
-        const d = new Date();
-        d.setDate(d.getDate() + getRandomInt(-5, 15)); // Some deadlines in past, some in future
-        
-        await Task.create({
-          title: `Assignment ${t + 1}: ${subjectNames[t % subjectNames.length]}`,
-          description: `Complete the chapter exercises and submit them via the portal. Focus on the core principles discussed in class.`,
-          deadline: d,
-          status: getRandomInt(0, 1) === 0 ? 'pending' : 'completed',
-          studentId: newStudent._id,
-          teacherId: teacher._id
-        });
-      }
+                // Create Academic Records
+                await AcademicRecord.create([
+                    {
+                        studentId: student._id,
+                        semester: 1,
+                        year: 2023,
+                        gpa: sem1GPA,
+                        subjects: [{ subjectName: 'Basics', marks: sem1GPA * 10, grade: 'A' }]
+                    },
+                    {
+                        studentId: student._id,
+                        semester: 2,
+                        year: 2024,
+                        gpa: sem2GPA,
+                        subjects: [{ subjectName: 'Advanced', marks: sem2GPA * 10, grade: 'A' }]
+                    }
+                ]);
+            }
+            studentIds.push(student._id);
+        }
+        console.log('Inserted 40 students successfully ✅');
+
+        // 4. Create 5 Tasks
+        const taskCount = await Task.countDocuments();
+        if (taskCount < 5) {
+            const sampleTasks = [
+                'Project Proposal',
+                'Literature Review',
+                'Database Design',
+                'Frontend Mockup',
+                'Backend API Docs'
+            ];
+
+            for (let i = 0; i < 5; i++) {
+                await Task.create({
+                    title: sampleTasks[i],
+                    description: `Complete the ${sampleTasks[i]} for the semester project.`,
+                    deadline: new Date(Date.now() + (i + 1) * 24 * 60 * 60 * 1000),
+                    status: 'pending',
+                    studentId: getRandomItem(studentIds),
+                    teacherId: teacher._id
+                });
+            }
+            console.log('Created 5 tasks successfully 📝');
+        }
+
+        console.log('\nDatabase seeding completed! 🚀');
+        process.exit(0);
+    } catch (error) {
+        console.error('Error seeding database ❌:', error.message);
+        process.exit(1);
     }
-
-    console.log(`✅ Successfully seeded DB with 40 students, their records, messages, and tasks.`);
-    process.exit(0);
-  } catch (error) {
-    console.error('❌ Error seeding the database:', error);
-    process.exit(1);
-  }
 };
 
 seedDB();

@@ -26,16 +26,20 @@ app.use((req, res, next) => {
 // ============ DATABASE CONNECTION ============
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/analytics_db';
-    console.log(`🔗 Connecting to MongoDB...`);
+    const mongoURI = process.env.MONGO_URI;
+    if (!mongoURI) {
+      throw new Error('MONGO_URI is missing in environment variables');
+    }
+    
+    console.log(`🔗 Connecting to MongoDB Atlas...`);
 
     await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log('MongoDB Connected ✅');
+    console.log('Connected to MongoDB Atlas ✅');
   } catch (error) {
-    console.error('❌ MongoDB connection error:', error.message);
+    console.error('Failed to connect to MongoDB Atlas ❌', error.message);
     process.exit(1);
   }
 };
@@ -132,11 +136,14 @@ const taskSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Create Models
-const Student = mongoose.model('Student', studentSchema);
+// Create Model (Pointing to 'users' collection)
+const Student = mongoose.model('Student', studentSchema, 'users');
 const AcademicRecord = mongoose.model('AcademicRecord', academicRecordSchema);
 const Message = mongoose.model('Message', messageSchema);
 const Task = mongoose.model('Task', taskSchema);
+
+// Export bcrypt for use
+const bcrypt = require('bcryptjs');
 
 // ============ CONTROLLER FUNCTIONS ============
 
@@ -290,8 +297,9 @@ const manualLogin = async (req, res) => {
       return res.status(403).json({ success: false, message: 'You are not allowed to access the Admin Panel.' });
     }
 
-    // Verify Password Against DB (Using plaintext since it's seeded as such)
-    if (password !== user.password) {
+    // Verify Password Against DB (Using bcrypt for hashed passwords)
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Invalid password' });
     }
     
