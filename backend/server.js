@@ -1058,21 +1058,32 @@ app.post('/api/test', (req, res) => {
   });
 });
 
-// 404 Handler
-app.use('*', (req, res) => {
-  console.log(`❌ Route not found: ${req.method} ${req.originalUrl}`);
-  res.status(404).json({ 
-    success: false, 
-    message: `Route ${req.originalUrl} not found`, 
-    method: req.method,
-    availableRoutes: [
-      '/api/auth/login',
-      '/api/auth/google-signin',
-      '/api/students',
-      '/api/academic',
-      '/api/messages',
-      '/api/health'
-    ] 
+// ============ SERVE FRONTEND (PRODUCTION) ============
+const frontendPath = path.join(__dirname, '../frontend/build');
+
+// Serve static assets
+app.use(express.static(frontendPath));
+
+// For any route that doesn't match an internal API route, return index.html
+app.get('*', (req, res) => {
+  // Check if it's an /api route - if so, STILL return a 404 JSON for missing endpoints
+  if (req.originalUrl.startsWith('/api')) {
+    console.log(`❌ API Route not found: ${req.method} ${req.originalUrl}`);
+    return res.status(404).json({
+      success: false,
+      message: `API Route ${req.originalUrl} not found`,
+    });
+  }
+  
+  // For all other routes (React Router), serve index.html
+  res.sendFile(path.join(frontendPath, 'index.html'), (err) => {
+    if (err) {
+      console.error('❌ Failed to send index.html:', err);
+      res.status(404).json({
+        success: false,
+        message: 'Application build not found. Please build the frontend first.'
+      });
+    }
   });
 });
 
