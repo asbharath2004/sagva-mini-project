@@ -1,0 +1,125 @@
+.registration-modal {
+  --bs-modal-bg: #ffffff;
+  --bs-modal-border-radius: 12px;
+}
+
+.registration-modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 12px 12px 0 0;
+}
+
+.registration-modal-title {
+  color: white;
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: 0.3px;
+}
+
+.registration-modal-body {
+  padding: 2rem 1.8rem;
+}
+
+.user-info-section {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border-left: 4px solid #667eea;
+}
+
+.user-info-item {
+  margin-bottom: 1rem;
+}
+
+.user-info-item:last-child {
+  margin-bottom: 0;
+}
+
+.user-info-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.user-info-value {
+  font-size: 1rem;
+  color: #212529;
+  font-weight: 500;
+  margin: 0;
+  word-break: break-all;
+}
+
+.form-label-custom {
+  font-weight: 600;
+  color: #212529;
+  font-size: 0.95rem;
+}
+
+.form-select {
+  border: 1.5px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.form-select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.form-select.is-invalid {
+  border-color: #dc3545;
+}
+
+.form-control-feedback {
+  color: #dc3545;
+  font-size: 0.85rem;
+  margin-top: 0.35rem;
+}
+
+.registration-continue-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.registration-continue-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  color: white;
+}
+
+.registration-continue-btn:disabled {
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+  cursor: not-allowed;
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .registration-modal-body {
+    padding: 1.5rem 1rem;
+  }
+
+  .user-info-section {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .registration-modal-title {
+    font-size: 1.1rem;
+  }
+}
