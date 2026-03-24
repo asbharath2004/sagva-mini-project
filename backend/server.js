@@ -11,7 +11,7 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Enable CORS for frontend
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5000', 'http://127.0.0.1:3000'],
+  origin: '*', // Allow all origins for deployment flexibility
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -27,16 +27,15 @@ app.use((req, res, next) => {
 const connectDB = async () => {
   try {
     const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/analytics_db';
-    console.log(`🔗 Connecting to MongoDB at ${mongoURI}...`);
+    console.log(`🔗 Connecting to MongoDB...`);
 
     await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log('MongoDB connected');
+    console.log('MongoDB Connected ✅');
   } catch (error) {
     console.error('❌ MongoDB connection error:', error.message);
-    console.error('⚠️  Make sure MongoDB is running: mongod');
     process.exit(1);
   }
 };
@@ -1074,7 +1073,7 @@ connectDB();
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT} 🚀`);
 });
 
 module.exports = app;

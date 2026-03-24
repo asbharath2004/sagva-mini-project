@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 // For development, use dummy data. In production, update to your API URL
+// API URL configuration
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const apiClient = axios.create({
