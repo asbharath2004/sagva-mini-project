@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Badge, Button, Image } from 'react-bootstrap';
+import { Container, Row, Col, Card, Badge, Button } from 'react-bootstrap';
 import { CheckSquare, Check, X, Clock, UserCheck } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Loading from '../components/Loading';
@@ -8,7 +8,6 @@ import { taskAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 export const TeacherReviewPage = () => {
-  const { user } = useAuth();
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

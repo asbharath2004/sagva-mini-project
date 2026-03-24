@@ -8,7 +8,6 @@ import RoleBasedRoute from './components/RoleBasedRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import StudentDashboard from './pages/StudentDashboard';
-import AddRecordPage from './pages/AddRecordPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import TeacherDashboard from './pages/TeacherDashboard';
 import AdminPanel from './pages/AdminPanel';

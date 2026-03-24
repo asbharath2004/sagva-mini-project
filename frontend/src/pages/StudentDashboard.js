@@ -20,8 +20,7 @@ import {
   List,
   AlertTriangle,
   MessageSquare,
-  ArrowRight,
-  BookOpen
+  ArrowRight
 } from 'lucide-react';
 import { Container, Row, Col, Table, Badge, Card, Alert, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
@@ -78,14 +77,7 @@ export const StudentDashboard = () => {
     fetchData();
   }, [user]);
 
-  const handleCompleteTask = async (taskId) => {
-    try {
-      await taskAPI.markTaskCompleted(taskId);
-      setTasks(tasks.map(t => t._id === taskId ? { ...t, status: 'completed' } : t));
-    } catch (err) {
-      console.error('Error completing task:', err);
-    }
-  };
+
 
   if (loading) return <DashboardLayout><Loading /></DashboardLayout>;
   if (error) {
@@ -152,17 +144,6 @@ export const StudentDashboard = () => {
   const improvement = student?.previousGPA ? (((student.currentGPA - student.previousGPA) / student.previousGPA) * 100).toFixed(1) : 0;
 
   const latestSubjects = records.length > 0 ? (records[records.length - 1]?.subjects || []) : [];
-  const studyPlan = latestSubjects.map(sub => {
-    let status = '', suggestion = '', color = '';
-    if (sub.marks < 50) {
-      status = 'Weak'; suggestion = 'Revise basics and practice daily'; color = 'danger';
-    } else if (sub.marks >= 50 && sub.marks <= 70) {
-      status = 'Needs Improvement'; suggestion = 'Practice more problems and revise notes'; color = 'warning';
-    } else {
-      status = 'Good'; suggestion = 'Maintain performance and try advanced problems'; color = 'success';
-    }
-    return { subject: sub.subjectName, marks: sub.marks, status, suggestion, color };
-  });
 
   return (
     <DashboardLayout>

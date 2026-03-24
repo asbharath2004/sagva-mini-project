@@ -25,11 +25,7 @@ export const ManageAcademicRecordsPage = () => {
     subjects: [{ subjectName: '', marks: '', grade: '' }]
   });
 
-  useEffect(() => {
-    fetchData();
-  }, [studentId]);
-
-  const fetchData = async () => {
+  const fetchData = React.useCallback(async () => {
     try {
       setLoading(true);
       const studentData = await studentAPI.getStudent(studentId);
@@ -43,7 +39,11 @@ export const ManageAcademicRecordsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [studentId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const calculateGrade = (marks) => {
     const m = parseInt(marks) || 0;

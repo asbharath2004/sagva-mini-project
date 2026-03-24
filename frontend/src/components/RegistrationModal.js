@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Form, Button, Alert } from 'react-bootstrap';
+import { Modal, Form, Button } from 'react-bootstrap';
 import '../styles/RegistrationModal.css';
 
 export const RegistrationModal = ({ show, googleUser, onSubmit, isLoading }) => {

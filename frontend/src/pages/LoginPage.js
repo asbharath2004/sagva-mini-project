@@ -28,7 +28,6 @@ export const LoginPage = () => {
   const [googleUser, setGoogleUser] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
   const [userId, setUserId] = useState(null);
-  const [isGoogleSignIn, setIsGoogleSignIn] = useState(false);
 
   const validateForm = () => {
     const newErrors = {};
@@ -141,7 +140,6 @@ export const LoginPage = () => {
           });
           setUserId(data.data.id);
           setShowRegistrationModal(true);
-          setIsGoogleSignIn(true);
         } else {
           // Directly log in existing users
           const userData = {

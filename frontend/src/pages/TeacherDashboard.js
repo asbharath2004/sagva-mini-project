@@ -6,12 +6,11 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   ScatterChart,
   Scatter,
 } from 'recharts';
-import { Users, AlertCircle, TrendingDown, TrendingUp, CheckSquare } from 'lucide-react';
+import { Users, AlertCircle, TrendingUp, CheckSquare } from 'lucide-react';
 import { Container, Row, Col, Badge, Card, Table, Form, Alert, Button, Modal } from 'react-bootstrap';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Loading from '../components/Loading';

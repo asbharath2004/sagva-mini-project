@@ -82,9 +82,7 @@ export const AdminPanel = () => {
     value: dept.students,
   }));
 
-  const customLabel = ({ name, value, percent }) => {
-    return `${name}: ${value}`;
-  };
+
 
   return (
     <DashboardLayout>

@@ -37,7 +37,7 @@ export const MessagingPage = () => {
       }
       fetchUnreadCount();
     }
-  }, [currentUser, isTeacher]);
+  }, [currentUser, isTeacher, fetchStudents, fetchConversations, fetchUnreadCount]);
 
   useEffect(() => {
     scrollToBottom();
@@ -47,7 +47,7 @@ export const MessagingPage = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const fetchStudents = async () => {
+  const fetchStudents = React.useCallback(async () => {
     try {
       setLoading(true);
       const data = await studentAPI.getAllStudents();
@@ -58,9 +58,9 @@ export const MessagingPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isTeacher]);
 
-  const fetchConversations = async () => {
+  const fetchConversations = React.useCallback(async () => {
     try {
       setLoading(true);
       const data = await messageAPI.getUserConversations(currentUser.id || currentUser._id);
@@ -71,7 +71,7 @@ export const MessagingPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUser]);
 
   const applyFilters = (data, type, query) => {
     let result = data;
@@ -124,14 +124,14 @@ export const MessagingPage = () => {
     }
   };
 
-  const fetchUnreadCount = async () => {
+  const fetchUnreadCount = React.useCallback(async () => {
     try {
       const count = await messageAPI.getUnreadCount(currentUser.id || currentUser._id);
       setUnreadCount(count);
     } catch (err) {
       console.error('Error fetching unread count:', err);
     }
-  };
+  }, [currentUser]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
