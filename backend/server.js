@@ -1017,6 +1017,15 @@ app.post('/api/tasks/:taskId/update-status', authenticate, authorize(['teacher',
 // Analytics / Leaderboard
 app.get('/api/analytics/leaderboard', authenticate, getLeaderboardAndPeerData);
 
+// Root Route (for health checks)
+app.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'SAGVA API is live and running 🚀',
+    documentation: 'Check /api/health for detailed status'
+  });
+});
+
 // Health Check
 app.get('/api/health', (req, res) => {
   res.status(200).json({
