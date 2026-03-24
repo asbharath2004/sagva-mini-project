@@ -2,10 +2,10 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
-const MONGO_URI = process.env.MONGO_URI;
+const mongoURL = process.env.mongo_url;
 
-if (!MONGO_URI) {
-  console.error('MONGO_URI is missing in .env file ❌');
+if (!mongoURL) {
+  console.error('mongo_url is missing in .env file ❌');
   process.exit(1);
 }
 
@@ -64,7 +64,7 @@ const getRandomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const seedData = async () => {
   try {
     console.log('🔗 Connecting to MongoDB Atlas...');
-    await mongoose.connect(MONGO_URI);
+    await mongoose.connect(mongoURL);
 
     // 1. Find the already seeded Teacher
     const teacher = await User.findOne({ role: 'teacher' });

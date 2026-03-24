@@ -28,6 +28,48 @@ export const MessagingPage = () => {
   const isTeacher = currentUser?.role === 'teacher' || currentUser?.role === 'admin';
   const messagesEndRef = useRef(null);
 
+  const fetchUnreadCount = React.useCallback(async () => {
+    try {
+      if (!currentUser?.id && !currentUser?._id) return;
+      const count = await messageAPI.getUnreadCount(currentUser.id || currentUser._id);
+      setUnreadCount(count || 0);
+    } catch (err) {
+      console.error('Error fetching unread count:', err);
+    }
+  }, [currentUser]);
+
+  const fetchStudents = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await studentAPI.getAllStudents();
+      setContacts(data || []);
+      
+      // Inline applyFilters logic to avoid dependency issues
+      let result = data || [];
+      if (searchQuery) {
+        result = result.filter(s => s.name?.toLowerCase().includes(searchQuery.toLowerCase()));
+      }
+      setFilteredContacts(result);
+    } catch (err) {
+      setError('Failed to load students');
+    } finally {
+      setLoading(false);
+    }
+  }, [searchQuery]);
+
+  const fetchConversations = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await messageAPI.getUserConversations(currentUser.id || currentUser._id);
+      setContacts(data || []);
+      setFilteredContacts(data || []);
+    } catch (err) {
+      setError('Failed to load conversations');
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUser]);
+
   useEffect(() => {
     if (currentUser) {
       if (isTeacher) {
@@ -39,84 +81,39 @@ export const MessagingPage = () => {
     }
   }, [currentUser, isTeacher, fetchStudents, fetchConversations, fetchUnreadCount]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const fetchStudents = React.useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await studentAPI.getAllStudents();
-      setContacts(data);
-      applyFilters(data, 'all', '');
-    } catch (err) {
-      setError('Failed to load students');
-    } finally {
-      setLoading(false);
-    }
-  }, [isTeacher]);
-
-  const fetchConversations = React.useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await messageAPI.getUserConversations(currentUser.id || currentUser._id);
-      setContacts(data);
-      setFilteredContacts(data);
-    } catch (err) {
-      setError('Failed to load conversations');
-    } finally {
-      setLoading(false);
-    }
-  }, [currentUser]);
-
-  const applyFilters = (data, type, query) => {
-    let result = data;
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
     
-    if (isTeacher) {
-      if (type === 'atRisk') {
+    let result = contacts;
+    if (filterType !== 'all') {
+      if (filterType === 'atRisk') {
         result = result.filter(s => s.velocityScore < 0 || s.currentGPA < 3.0);
-      } else if (type === 'highPerformer') {
+      } else if (filterType === 'highPerformer') {
         result = result.filter(s => s.currentGPA >= 3.5);
       }
-      
-      if (query) {
-        result = result.filter(s => s.name?.toLowerCase().includes(query.toLowerCase()));
-      }
-    } else {
-      if (query) {
-        result = result.filter(c => c._id?.toLowerCase().includes(query.toLowerCase()));
-      }
+    }
+    
+    if (query) {
+      result = result.filter(c => (c.name || '').toLowerCase().includes(query.toLowerCase()));
     }
     
     setFilteredContacts(result);
   };
 
-  const handleFilterChange = (type) => {
-    setFilterType(type);
-    applyFilters(contacts, type, searchQuery);
-  };
-
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-    applyFilters(contacts, filterType, e.target.value);
-  };
-
   const handleContactSelect = (contact) => {
     setSelectedContact(contact);
-    const contactId = isTeacher ? (contact.id || contact._id) : contact._id;
+    const contactId = isTeacher ? (contact.id || contact._id) : (contact._id || contact.id);
     fetchConversationMessages(contactId);
   };
 
   const fetchConversationMessages = async (contactId) => {
     try {
+      if (!contactId) return;
       const currentId = currentUser.id || currentUser._id;
       const conversationId = [currentId, contactId].sort().join('-');
       const data = await messageAPI.getConversation(conversationId);
-      setMessages(data);
+      setMessages(data || []);
       await messageAPI.markConversationAsRead(contactId, currentId);
       fetchUnreadCount();
     } catch (err) {
@@ -124,14 +121,32 @@ export const MessagingPage = () => {
     }
   };
 
-  const fetchUnreadCount = React.useCallback(async () => {
-    try {
-      const count = await messageAPI.getUnreadCount(currentUser.id || currentUser._id);
-      setUnreadCount(count);
-    } catch (err) {
-      console.error('Error fetching unread count:', err);
+  const handleFilterChange = (type) => {
+    setFilterType(type);
+    
+    let result = contacts;
+    if (isTeacher) {
+      if (type === 'atRisk') {
+        result = result.filter(s => s.velocityScore < 0 || s.currentGPA < 3.0);
+      } else if (type === 'highPerformer') {
+        result = result.filter(s => s.currentGPA >= 3.5);
+      }
     }
-  }, [currentUser]);
+    
+    if (searchQuery) {
+      result = result.filter(c => (c.name || '').toLowerCase().includes(searchQuery.toLowerCase()));
+    }
+    
+    setFilteredContacts(result);
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();

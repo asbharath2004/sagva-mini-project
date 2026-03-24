@@ -1,4 +1,6 @@
-require('dotenv').config();
+const path = require('path');
+// Load environment variables from specific path
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -26,9 +28,9 @@ app.use((req, res, next) => {
 // ============ DATABASE CONNECTION ============
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGO_URI;
+    const mongoURI = process.env.MONGO_URI || process.env.MONGODB_URI;
     if (!mongoURI) {
-      throw new Error('MONGO_URI is missing in environment variables');
+      throw new Error('Database URI (MONGO_URI) is missing. ACTION REQUIRED: Add MONGO_URI to your environment variables.');
     }
     
     console.log(`🔗 Connecting to MongoDB Atlas...`);

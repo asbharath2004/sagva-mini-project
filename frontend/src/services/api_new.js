@@ -146,7 +146,7 @@ export const messageAPI = {
   // Send message
   sendMessage: async (messageData) => {
     try {
-      const response = await apiClient.post('/messages', messageData);
+      const response = await apiClient.post('messages', messageData);
       return response.data.data;
     } catch (error) {
       console.error('Error sending message:', error);
@@ -157,7 +157,7 @@ export const messageAPI = {
   // Get user messages
   getUserMessages: async (userId, isRead, messageType) => {
     try {
-      const response = await apiClient.get(`/messages/${userId}`, {
+      const response = await apiClient.get(`messages/${userId}`, {
         params: { isRead, messageType }
       });
       return response.data.data;
@@ -170,7 +170,7 @@ export const messageAPI = {
   // Get conversations
   getUserConversations: async (userId) => {
     try {
-      const response = await apiClient.get(`/messages/conversations/${userId}`);
+      const response = await apiClient.get(`messages/conversations/${userId}`);
       return response.data.data;
     } catch (error) {
       console.error('Error fetching conversations:', error);
@@ -194,7 +194,7 @@ export const messageAPI = {
   // Get conversation thread
   getConversation: async (conversationId) => {
     try {
-      const response = await apiClient.get(`/messages/conversation/${conversationId}`);
+      const response = await apiClient.get(`messages/conversation/${conversationId}`);
       return response.data.data;
     } catch (error) {
       console.error('Error fetching conversation:', error);
@@ -205,7 +205,7 @@ export const messageAPI = {
   // Get unread count
   getUnreadCount: async (userId) => {
     try {
-      const response = await apiClient.get(`/messages/unread-count/${userId}`);
+      const response = await apiClient.get(`messages/unread-count/${userId}`);
       return response.data.data.unreadCount;
     } catch (error) {
       console.error('Error fetching unread count:', error);
@@ -227,7 +227,7 @@ export const messageAPI = {
   // Mark conversation as read
   markConversationAsRead: async (senderId, receiverId) => {
     try {
-      const response = await apiClient.put(`/messages/sender/${senderId}/receiver/${receiverId}/read`);
+      const response = await apiClient.put(`messages/sender/${senderId}/receiver/${receiverId}/read`);
       return response.data;
     } catch (error) {
       console.error('Error marking conversation as read:', error);

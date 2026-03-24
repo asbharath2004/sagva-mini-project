@@ -48,7 +48,7 @@ const Task = mongoose.model('Task', taskSchema);
 
 // Helper for random number in range
 const randomGPA = () => parseFloat((Math.random() * (9.5 - 6.0) + 6.0).toFixed(2));
-const getRandomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const getRandomItem = (arr) => arr[arr.length * Math.random() | 0];
 
 const seedDB = async () => {
     try {
@@ -58,9 +58,6 @@ const seedDB = async () => {
             useUnifiedTopology: true,
         });
         console.log('Connected to MongoDB Atlas ✅');
-
-        // Clear existing data? 
-        // Logic: Check for duplicates instead as requested.
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash('password123', salt);
@@ -113,7 +110,7 @@ const seedDB = async () => {
                     email: email,
                     password: hashedPassword,
                     role: 'student',
-                    department: getRandomItem(departments),
+                    department: departments[departments.length * Math.random() | 0],
                     year: String(Math.floor(Math.random() * 4) + 1),
                     currentGPA: sem2GPA,
                     previousGPA: sem1GPA,
@@ -159,7 +156,7 @@ const seedDB = async () => {
                     description: `Complete the ${sampleTasks[i]} for the semester project.`,
                     deadline: new Date(Date.now() + (i + 1) * 24 * 60 * 60 * 1000),
                     status: 'pending',
-                    studentId: getRandomItem(studentIds),
+                    studentId: studentIds[studentIds.length * Math.random() | 0],
                     teacherId: teacher._id
                 });
             }

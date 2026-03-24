@@ -31,7 +31,7 @@ export const studentAPI = {
   // Get all students
   getAllStudents: async () => {
     try {
-      const response = await apiClient.get('/students');
+      const response = await apiClient.get('students');
       return response.data.data;
     } catch (error) {
       return Promise.reject(error);
@@ -41,7 +41,7 @@ export const studentAPI = {
   // Get single student
   getStudent: async (studentId) => {
     try {
-      const response = await apiClient.get(`/students/${studentId}`);
+      const response = await apiClient.get(`students/${studentId}`);
       return response.data.data;
     } catch (error) {
       return Promise.reject(error);
